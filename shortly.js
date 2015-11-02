@@ -96,7 +96,27 @@ function(req, res) {
 
 app.post('/signup', 
 function(req, res) {
+  console.log("req.body: ", req.body);
+  var username = req.body.username;
+  var password = req.body.password;
 
+  new User({username: username}).fetch().then(function(found){
+    if (found){
+      // TODO - user already found, redirect to login screen
+      console.log("user already in db, time to login")
+    } else {
+
+      Users.create({
+        username: username,
+        password: password
+      })
+      .then(function(newUser){
+        // redirect to index page
+        res.send('new user created');
+      })
+
+    }
+  });
   // TBD
 
 });

@@ -41,6 +41,7 @@ app.get('/', checkUser, function(req, res) {
 });
 
 app.get('/create', checkUser, function(req, res) {
+  console.log(req.method);
   res.render('index');
 });
 
@@ -61,7 +62,7 @@ function(req, res) {
 
   new Link({ url: uri }).fetch().then(function(model) {
     if (model) {
-      res.send(200, found.attributes);
+      res.send(200, model.attributes);
     } else {
       util.getUrlTitle(uri, function(err, title) {
         if (err) {
@@ -130,6 +131,14 @@ app.get('/signup',
 function(req, res) {
  res.render('signup');
 });
+
+app.get('/logout', checkUser, function(req, res) {
+ req.session.destroy(function() {
+    // res.render('index');
+    res.redirect('/login');
+ })
+});
+
 
 app.post('/signup', 
 function(req, res) {

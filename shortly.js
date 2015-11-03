@@ -132,11 +132,16 @@ function(req, res) {
  res.render('signup');
 });
 
-app.get('/logout', checkUser, function(req, res) {
- req.session.destroy(function() {
-    // res.render('index');
+app.get('/logout', function(req, res) {
+  console.log('logging out from shortly.js')
+  console.log('session before: ', req.session);
+
+  req.session.destroy(function() {
+    console.log('session after: ', req.session);
+    console.log('destroying');
     res.redirect('/login');
- })
+  });
+
 });
 
 

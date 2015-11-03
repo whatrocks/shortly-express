@@ -2,6 +2,9 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
+var cookieParser = require('cookie-parser');
+var checkUser = require('./app/helpers');
 
 var bcrypt = require('bcrypt-nodejs');
 
@@ -22,21 +25,26 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(cookieParser('hackreactor'));
+app.use(session({
+  secret: 'hackreactor',
+  resave: true,
+  saveUninitialized: true
+}));
+
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
-function(req, res) {
+app.get('/', checkUser, function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
-function(req, res) {
+app.get('/create', checkUser, function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
-function(req, res) {
+app.get('/links', checkUser, function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -91,22 +99,22 @@ function(req, res) {
 
   new User({username: username}).fetch().then(function(model){
     if (model){
-        //get the model's salt & concat with password
         var salt = model.get('salt');
         var modelPassword = model.get('password');
         var hash = bcrypt.hashSync(password, salt);
-
-        console.log("hash during login: ", hash);
-        console.log("modelPW: ", modelPassword);
-
-        console.log(bcrypt.compareSync(password, modelPassword));
-
         if ( hash === modelPassword) {
           // user is legit
           console.log("user is legit");
+
+          req.session.regenerate(function() {
+            req.session.user = username;
+            res.redirect('/');
+          });
+
         } else {
           // ask them to try again
           console.log("try again loser");
+          res.redirect('/login');
         }
 
     } else {

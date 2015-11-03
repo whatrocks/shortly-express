@@ -15,28 +15,25 @@ var User = db.Model.extend({
 		this.on('creating', function(model, attrs, options) {
 			
 			var salt = bcrypt.genSaltSync(10);
-			var temp = model.get('password') + salt;
-			var hash = bcrypt.hashSync(temp);
+			// var temp = model.get('password') + salt;
+			// console.log("temp: ", temp);
+			var hash = bcrypt.hashSync(model.get('password'), salt);
+			console.log("hash during signup: ", hash);
 			model.set('password', hash);
 			model.set('salt', salt);
-
-		// 	bcrypt.genSalt(10, function(err, salt) {
-				
-		// 		if (err) console.log("genSalt:", err);
-		// 		console.log("salt is: ", salt);
-
-		// 		bcrypt.hash(model.get('password'), salt, null, function(err, hash) {
-		// 			if (err) console.log("hashing: ",err);
-
-		// 			model.set('password', hash);
-		// 			model.set('salt', salt);
-		// 			console.log("model.password ", model.get('password'));
-		// 			console.log("model.salt ", model.get('salt'));
-
-		// 			console.log("New user created in DB")
-		// 		});
-		// 	});
 		});
+
+		// this.on('fetched', function(model, response, options) {
+		// 	  //get the model's salt & concat with password
+		// 	  var salt = model.get('salt');
+		// 	  var modelPassword = model.get('password');
+  //       //push this through hash function (bcrypt)
+  //       //compare model password with what this is
+  //         //if match, do auth
+  //      		console.log('password: ', model.get('password'));
+		// 	console.log('model: ', model);
+		// 	console.log('response: ', response);
+		// });
 	}
 });
 

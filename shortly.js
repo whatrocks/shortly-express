@@ -3,6 +3,8 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 
+var bcrypt = require('bcrypt-nodejs');
+
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -49,8 +51,8 @@ function(req, res) {
     return res.send(404);
   }
 
-  new Link({ url: uri }).fetch().then(function(found) {
-    if (found) {
+  new Link({ url: uri }).fetch().then(function(model) {
+    if (model) {
       res.send(200, found.attributes);
     } else {
       util.getUrlTitle(uri, function(err, title) {
@@ -84,7 +86,34 @@ function(req, res) {
 app.post('/login', 
 function(req, res) {
 
-  // TBD
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User({username: username}).fetch().then(function(model){
+    if (model){
+        //get the model's salt & concat with password
+        var salt = model.get('salt');
+        var modelPassword = model.get('password');
+        var hash = bcrypt.hashSync(password, salt);
+
+        console.log("hash during login: ", hash);
+        console.log("modelPW: ", modelPassword);
+
+        console.log(bcrypt.compareSync(password, modelPassword));
+
+        if ( hash === modelPassword) {
+          // user is legit
+          console.log("user is legit");
+        } else {
+          // ask them to try again
+          console.log("try again loser");
+        }
+
+    } else {
+      // redirect to signup page
+      res.redirect('/signup');
+    }
+  });
 
 });
 
@@ -96,14 +125,14 @@ function(req, res) {
 
 app.post('/signup', 
 function(req, res) {
-  console.log("req.body: ", req.body);
+  // console.log("req.body: ", req.body);
   var username = req.body.username;
   var password = req.body.password;
 
-  new User({username: username}).fetch().then(function(found){
-    if (found){
+  new User({username: username}).fetch().then(function(model){
+    if (model){
       // TODO - user already found, redirect to login screen
-      console.log("user already in db, time to login")
+      res.redirect('/login');
     } else {
 
       Users.create({
@@ -112,7 +141,7 @@ function(req, res) {
       })
       .then(function(newUser){
         // redirect to index page
-        res.send('new user created');
+        res.redirect('/login');
       })
 
     }

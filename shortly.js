@@ -26,7 +26,6 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cookieParser('hackreactor'));
 app.use(session({
   secret: 'hackreactor',
   resave: true,
@@ -41,7 +40,6 @@ app.get('/', checkUser, function(req, res) {
 });
 
 app.get('/create', checkUser, function(req, res) {
-  console.log(req.method);
   res.render('index');
 });
 
@@ -51,12 +49,10 @@ app.get('/links', checkUser, function(req, res) {
   });
 });
 
-app.post('/links', 
-function(req, res) {
+app.post('/links', function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
-    console.log('Not a valid url: ', uri);
     return res.send(404);
   }
 
@@ -66,7 +62,6 @@ function(req, res) {
     } else {
       util.getUrlTitle(uri, function(err, title) {
         if (err) {
-          console.log('Error reading URL heading: ', err);
           return res.send(404);
         }
 
@@ -87,13 +82,11 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
-app.get('/login', 
-function(req, res) {
+app.get('/login', function(req, res) {
  res.render('login');
 });
 
-app.post('/login', 
-function(req, res) {
+app.post('/login', function(req, res) {
 
   var username = req.body.username;
   var password = req.body.password;
@@ -104,8 +97,6 @@ function(req, res) {
         var modelPassword = model.get('password');
         var hash = bcrypt.hashSync(password, salt);
         if ( hash === modelPassword) {
-          // user is legit
-          console.log("user is legit");
 
           req.session.regenerate(function() {
             req.session.user = username;
@@ -113,47 +104,34 @@ function(req, res) {
           });
 
         } else {
-          // ask them to try again
-          console.log("try again loser");
           res.redirect('/login');
         }
 
     } else {
-      // redirect to signup page
-      res.redirect('/signup');
+      res.redirect('/login');
     }
   });
 
 });
 
 
-app.get('/signup', 
-function(req, res) {
+app.get('/signup', function(req, res) {
  res.render('signup');
 });
 
 app.get('/logout', function(req, res) {
-  console.log('logging out from shortly.js')
-  console.log('session before: ', req.session);
-
   req.session.destroy(function() {
-    console.log('session after: ', req.session);
-    console.log('destroying');
     res.redirect('/login');
   });
-
 });
 
 
-app.post('/signup', 
-function(req, res) {
-  // console.log("req.body: ", req.body);
+app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
   new User({username: username}).fetch().then(function(model){
     if (model){
-      // TODO - user already found, redirect to login screen
       res.redirect('/login');
     } else {
 
@@ -162,14 +140,10 @@ function(req, res) {
         password: password
       })
       .then(function(newUser){
-        // redirect to index page
-        res.redirect('/login');
+        res.redirect('/');
       })
-
     }
   });
-  // TBD
-
 });
 
 

@@ -1,14 +1,12 @@
+/*-----------REQUIRE STATEMENTS-------------------*/
+
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var cookieParser = require('cookie-parser');
 var checkUser = require('./app/helpers');
-
 var bcrypt = require('bcrypt-nodejs');
-
-
 var db = require('./app/config');
 var Users = require('./app/collections/users');
 var User = require('./app/models/user');
@@ -16,6 +14,7 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+/*------------------INITIALIZE MIDDLEWARE-------------------*/
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -25,16 +24,16 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(session({
   secret: 'hackreactor',
   resave: true,
   saveUninitialized: true
 }));
-
 app.use(express.static(__dirname + '/public'));
 
+/*------------------DEFINE ROUTES-------------------*/
 
+/*-------Routes that require Auth-------*/
 app.get('/', checkUser, function(req, res) {
   res.render('index');
 });
@@ -49,7 +48,7 @@ app.get('/links', checkUser, function(req, res) {
   });
 });
 
-app.post('/links', function(req, res) {
+app.post('/links', checkUser, function(req, res) {
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -78,16 +77,13 @@ app.post('/links', function(req, res) {
   });
 });
 
-/************************************************************/
-// Write your authentication routes here
-/************************************************************/
+/*------Routes that are Public----*/
 
 app.get('/login', function(req, res) {
  res.render('login');
 });
 
 app.post('/login', function(req, res) {
-
   var username = req.body.username;
   var password = req.body.password;
 
@@ -111,9 +107,7 @@ app.post('/login', function(req, res) {
       res.redirect('/login');
     }
   });
-
 });
-
 
 app.get('/signup', function(req, res) {
  res.render('signup');
@@ -124,7 +118,6 @@ app.get('/logout', function(req, res) {
     res.redirect('/login');
   });
 });
-
 
 app.post('/signup', function(req, res) {
   var username = req.body.username;
@@ -146,12 +139,7 @@ app.post('/signup', function(req, res) {
   });
 });
 
-
-/************************************************************/
-// Handle the wildcard route last - if all other routes fail
-// assume the route is a short code and try and handle it here.
-// If the short-code doesn't exist, send the user to '/'
-/************************************************************/
+/*--------WILDCARD ROUTE--------*/
 
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
